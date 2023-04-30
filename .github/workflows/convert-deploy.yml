@@ -1,13 +1,16 @@
-name: Convert SQLite db to RSS and deploy
+name: Convert SQLite db to RSS, deploy and notify
 
 on:
   schedule:
     - cron: "15 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   convert:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -40,12 +43,23 @@ jobs:
         run: |
           wget https://github.com/sidbelbase/nepstonks/raw/main/nepstonks.db
           chmod +x nepstonks.db
-          mkdir dist
+          mkdir -p dist/rss
 
       - name: Convert table "stock" to RSS feed
         run: |
-          sqlite3 -header -json nepstonks.db "SELECT * FROM stock;" | python3 nepse_rss.py -s > dist/stocks.rss
+          sqlite3 -header -json nepstonks.db "SELECT * FROM stock;" > dist/stocks.json
+          cat dist/stocks.json | python3 nepse_rss.py -s > dist/rss/stocks.rss
 
       - name: Convert table "announcement" to RSS feed
         run: |
-          sqlite3 -header -json nepstonks.db "SELECT * FROM announcement;" | python3 nepse_rss.py -a > dist/announcements.rss
+          sqlite3 -header -json nepstonks.db "SELECT * FROM announcement;" > dist/announcements.json
+          cat dist/announcements.json | python3 nepse_rss.py -a > dist/rss/announcements.rss
+
+  deploy:
+    needs: convert
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy feeds to `gh-pages` branch
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: $GITHUB_WORKSPACE/dist/rss

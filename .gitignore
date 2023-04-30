@@ -162,3 +162,5 @@ cython_debug/
 
 # Custom
 *.rss
+*.db
+dist/
