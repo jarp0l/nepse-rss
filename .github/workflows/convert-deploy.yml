@@ -69,6 +69,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: dist
+          path: dist
 
       - name: Deploy feeds to `gh-pages` branch
         uses: JamesIves/github-pages-deploy-action@v4
