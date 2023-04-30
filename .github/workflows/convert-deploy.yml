@@ -62,4 +62,5 @@ jobs:
       - name: Deploy feeds to `gh-pages` branch
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: $GITHUB_WORKSPACE/dist/rss
+          # Uses the folder ${{ GITHUB_WORKSPACE }}/dist/rss
+          folder: dist/rss
