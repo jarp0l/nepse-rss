@@ -48,12 +48,12 @@ jobs:
       - name: Convert table "stock" to RSS feed
         run: |
           sqlite3 -header -json nepstonks.db "SELECT * FROM stock;" > dist/stocks.json
-          cat dist/stocks.json | poetry run python nepse_rss.py -s > dist/rss/stocks.rss
+          cat dist/stocks.json | poetry run python nepse_rss.py -s > dist/rss/stocks.xml
 
       - name: Convert table "announcement" to RSS feed
         run: |
           sqlite3 -header -json nepstonks.db "SELECT * FROM announcement;" > dist/announcements.json
-          cat dist/announcements.json | poetry run python nepse_rss.py -a > dist/rss/announcements.rss
+          cat dist/announcements.json | poetry run python nepse_rss.py -a > dist/rss/announcements.xml
 
       - name: Upload RSS files as artifact
         uses: actions/upload-artifact@v3
