@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "nepse-rss"
+version = "0.1.0"
+description = "NEPSE RSS feed generator"
+authors = ["jarp0l"]
+readme = "README.md"
+packages = [{include = "nepse_rss"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+feedgen = "^0.9.0"
+
+[tool.poetry.group.dev.dependencies]
+isort = "^5.12.0"
+black = "^23.3.0"
+
+[tool.black]
+line-length = 80
+
+[tool.isort]
+profile = "black"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

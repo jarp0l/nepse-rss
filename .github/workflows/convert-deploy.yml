@@ -1,0 +1,51 @@
+name: Convert SQLite db to RSS and deploy
+
+on:
+  schedule:
+    - cron: "15 1 * * *"
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y sqlite3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install and configure poetry
+        run: |
+          python -m pip install -U poetry~=1.0
+          python -m poetry config virtualenvs.in-project true
+
+      - name: Install Python dependencies
+        run: python -m poetry install
+
+      - name: Cache the virtualenv
+        uses: actions/cache@v3
+        with:
+          path: ./.venv
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Download SQLite database
+        run: |
+          wget https://github.com/sidbelbase/nepstonks/raw/main/nepstonks.db
+          chmod +x nepstonks.db
+          mkdir dist
+
+      - name: Convert table "stock" to RSS feed
+        run: |
+          sqlite3 -header -json nepstonks.db "SELECT * FROM stock;" | python3 nepse_rss.py -s > dist/stocks.rss
+
+      - name: Convert table "announcement" to RSS feed
+        run: |
+          sqlite3 -header -json nepstonks.db "SELECT * FROM announcement;" | python3 nepse_rss.py -a > dist/announcements.rss
