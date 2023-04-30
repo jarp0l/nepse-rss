@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "NEPSE RSS feed generator"
 authors = ["jarp0l"]
 readme = "README.md"
-packages = [{include = "nepse_rss"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"

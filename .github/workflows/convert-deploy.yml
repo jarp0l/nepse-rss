@@ -31,7 +31,7 @@ jobs:
           python -m poetry config virtualenvs.in-project true
 
       - name: Install Python dependencies
-        run: python -m poetry install
+        run: python -m poetry install --no-dev
 
       - name: Cache the virtualenv
         uses: actions/cache@v3
@@ -48,12 +48,12 @@ jobs:
       - name: Convert table "stock" to RSS feed
         run: |
           sqlite3 -header -json nepstonks.db "SELECT * FROM stock;" > dist/stocks.json
-          cat dist/stocks.json | python3 nepse_rss.py -s > dist/rss/stocks.rss
+          cat dist/stocks.json | python nepse_rss.py -s > dist/rss/stocks.rss
 
       - name: Convert table "announcement" to RSS feed
         run: |
           sqlite3 -header -json nepstonks.db "SELECT * FROM announcement;" > dist/announcements.json
-          cat dist/announcements.json | python3 nepse_rss.py -a > dist/rss/announcements.rss
+          cat dist/announcements.json | python nepse_rss.py -a > dist/rss/announcements.rss
 
   deploy:
     needs: convert
