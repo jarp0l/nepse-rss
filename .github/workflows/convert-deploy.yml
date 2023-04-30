@@ -55,12 +55,22 @@ jobs:
           sqlite3 -header -json nepstonks.db "SELECT * FROM announcement;" > dist/announcements.json
           cat dist/announcements.json | poetry run python nepse_rss.py -a > dist/rss/announcements.rss
 
+      - name: Upload RSS files as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: dist/rss/
+
   deploy:
     needs: convert
     runs-on: ubuntu-latest
     steps:
+      - name: Download RSS files as artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: dist
+
       - name: Deploy feeds to `gh-pages` branch
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          # Uses the folder ${{ GITHUB_WORKSPACE }}/dist/rss
-          folder: dist/rss
+          folder: dist
