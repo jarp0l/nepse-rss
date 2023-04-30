@@ -18,7 +18,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y sqlite3
+          sudo apt install -y sqlite3 python3-pip
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -27,11 +27,11 @@ jobs:
 
       - name: Install and configure poetry
         run: |
-          python -m pip install -U poetry~=1.0
-          python -m poetry config virtualenvs.in-project true
+          pip install -U poetry~=1.0
+          poetry config virtualenvs.in-project true
 
       - name: Install Python dependencies
-        run: python -m poetry install --no-dev
+        run: poetry install --no-dev
 
       - name: Cache the virtualenv
         uses: actions/cache@v3
@@ -48,12 +48,12 @@ jobs:
       - name: Convert table "stock" to RSS feed
         run: |
           sqlite3 -header -json nepstonks.db "SELECT * FROM stock;" > dist/stocks.json
-          cat dist/stocks.json | python nepse_rss.py -s > dist/rss/stocks.rss
+          cat dist/stocks.json | poetry run python nepse_rss.py -s > dist/rss/stocks.rss
 
       - name: Convert table "announcement" to RSS feed
         run: |
           sqlite3 -header -json nepstonks.db "SELECT * FROM announcement;" > dist/announcements.json
-          cat dist/announcements.json | python nepse_rss.py -a > dist/rss/announcements.rss
+          cat dist/announcements.json | poetry run python nepse_rss.py -a > dist/rss/announcements.rss
 
   deploy:
     needs: convert
