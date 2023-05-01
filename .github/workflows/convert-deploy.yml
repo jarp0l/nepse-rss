@@ -30,14 +30,16 @@ jobs:
           pip install -U poetry~=1.0
           poetry config virtualenvs.in-project true
 
-      - name: Install Python dependencies
-        run: poetry install --no-dev
-
       - name: Cache the virtualenv
+        id: poetry-cache
         uses: actions/cache@v3
         with:
           path: ./.venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install Python dependencies
+        if: steps.poetry-cache.outputs.cache-hit != 'true'
+        run: poetry install --only main
 
       - name: Download SQLite database
         run: |
@@ -55,11 +57,11 @@ jobs:
           sqlite3 -header -json nepstonks.db "SELECT * FROM announcement;" > dist/announcements.json
           cat dist/announcements.json | poetry run python nepse_rss.py -a > dist/rss/announcements.xml
 
-      - name: Upload RSS files as artifact
+      - name: Upload files as artifact
         uses: actions/upload-artifact@v3
         with:
           name: dist
-          path: dist/rss/
+          path: dist
 
   deploy:
     needs: convert
@@ -68,13 +70,58 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Download RSS files as artifact
+      - name: Download files as artifact
         uses: actions/download-artifact@v3
         with:
           name: dist
           path: dist
 
-      - name: Deploy feeds to `gh-pages` branch
+      - name: Deploy RSS feeds to `gh-pages` branch
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: dist
+          folder: dist/rss
+
+  notify:
+    needs: convert
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y python3-pip
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install and configure poetry
+        run: |
+          pip install -U poetry~=1.0
+          poetry config virtualenvs.in-project true
+
+      - name: Cache the virtualenv
+        id: poetry-cache
+        uses: actions/cache@v3
+        with:
+          path: ./.venv
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
+      
+      - name: Install Python dependencies
+        if: steps.poetry-cache.outputs.cache-hit != 'true'
+        run: poetry install --only main
+
+      - name: Download files as artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: dist
+          path: dist
+
+      - name: Send notification to Discord
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+        run: |
+          cat dist/stocks.json | poetry run python notify.py
